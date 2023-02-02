@@ -64,23 +64,23 @@ stationP404long=station404long(1);
 
 figure(1);
 hold on;
-set(gca)
+set(gca);
 
 subplot(311);
 title('P395 Station Eastings, Northings, Vertical');
 hold on;
 pP395E = polyfit(P395t,P395x,1); %fits plots for eastings
 vP395E = pP395E(1);
-plot(P395t,P395x,'y');
-plot(P395t,polyval(pP395E,P395t),'linewidth',3);
+plot(P395t,P395x,'g');
+plot(P395t,polyval(pP395E,P395t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('eastings');
 
 subplot(312);
 hold on;
 pP395N = polyfit(P395t,P395y,1); %fits plots for northings
 vP395N = pP395N(1);
-plot(P395t,P395y,'r')
-plot(P395t,polyval(pP395N,P395t),'linewidth',3);
+plot(P395t,P395y,'b')
+plot(P395t,polyval(pP395N,P395t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('northings');
 
 subplot(313);
@@ -88,7 +88,7 @@ hold on;
 pP395Z = polyfit(P395t,P395z,1); %fits plots for northings
 vP395Z = pP395Z(1);
 plot(P395t,P395z,'r');
-plot(P395t,polyval(pP395Z,P395t),'linewidth',3);
+plot(P395t,polyval(pP395Z,P395t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('vertical');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,28 +97,31 @@ grid,xlabel ('Time'),ylabel ('vertical');
 
 figure(2);
 hold on;
-set(gca)
+set(gca);
 
 subplot(311);
+hold on;
 title('P396 Station Eastings, Northings, Vertical');
 pP396E=polyfit(P396t,P396x,1); %fits plots for eastings
 vP396E=pP396E(1);
-plot(P396t,P396x,'r');
-plot(P396t,polyval(pP396E,P396t),'linewidth',3);
+plot(P396t,P396x,'g');
+plot(P396t,polyval(pP396E,P396t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('eastings');
 
 subplot(312);
+hold on;
 pP396N=polyfit(P396t,P396y,1); %fits plots for northings
 vP396N=pP396N(1);
-plot(P396t,P396y,'r');
-plot(P396t,polyval(pP396N,P396t),'linewidth',3);
+plot(P396t,P396y,'b');
+plot(P396t,polyval(pP396N,P396t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('northings');
 
 subplot(313);
+hold on;
 pP396Z=polyfit(P396t,P396z,1); %fits plots for vertical
 vP396Z=pP396Z(1);
 plot(P396t,P396z,'r');
-plot(P396t,polyval(pP396Z,P396t),'linewidth',3);
+plot(P396t,polyval(pP396Z,P396t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('vertical');
 
 
@@ -131,25 +134,28 @@ hold on;
 set(gca)
 
 subplot(311);
+hold on;
 title('P395 Station Eastings, Northings, Vertical');
 pP404E = polyfit(P404t,P404x,1); %fits plots for eastings
 vP404E = pP404E(1);
-plot(P404t,P404x,'b'); 
-plot(P404t,polyval(pP404E,P404t),'linewidth',3);
+plot(P404t,P404x,'g'); 
+plot(P404t,polyval(pP404E,P404t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('eastings');
 
 subplot(312);
+hold on;
 pP404N = polyfit(P404t,P404y,1); %fits plots for northings
 vP404N = pP404N(1);
 plot(P404t,P404y,'b');
-plot(P404t,polyval(pP404N,P404t),'linewidth',3);
+plot(P404t,polyval(pP404N,P404t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('northings');
 
 subplot(313);
+hold on;
 pP404Z = polyfit(P404t,P404z,1); %fits plots for vertical
 vP404Z = pP404Z(1);
 plot(P404t,P404z,'r');
-plot(P404t,polyval(pP404Z,P404t),'linewidth',3);
+plot(P404t,polyval(pP404Z,P404t),'linewidth',1);
 grid,xlabel ('Time'),ylabel ('vertical');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
