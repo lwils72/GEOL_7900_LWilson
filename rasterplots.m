@@ -92,7 +92,14 @@ colormap(cpolar);
 
 % Just playing around to see what changing does
 
-dz2_2=-sqrt(dz_x(:,2:end).^2+dz1_x(2:end,:).^2); % says incompatible sizes but they are the same? ugh
+%dz2_2=-sqrt(dz_x(:,2:end).^2+dz1_x(2:end,:).^2); % says incompatible sizes but they are the same? ugh
 
+XDiff = dz1_x-dz_x;
 
+figure (9),clf, hold on
+title('XDiff') % titled for no confusion 
+imagesc(x/1e3,y/1e3,XDiff);
+axis xy; axis equal; grid; colorbar;
+caxis([-0.75,0.75]); % more defined axis
+colormap(cpolar); % using gray to give good shadows 
 
