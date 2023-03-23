@@ -1,0 +1,258 @@
+clear
+
+%
+% LiDAR raster differencing and iterative closest point differencing
+%
+
+filename='Kumamoto_example/compare_dem_before.tif';
+[array,metadata]=geotiffread(filename);
+x=metadata.XWorldLimits;
+y=metadata.YWorldLimits;
+z=flipud(array);
+z(find(z==-9999))=NaN;
+
+filename='Kumamoto_example/reference_dem_after.tif';
+[array,metadata]=geotiffread(filename);
+x1=metadata.XWorldLimits;
+y1=metadata.YWorldLimits;
+z1=flipud(array);
+z1(find(z1==-9999))=NaN;
+
+%
+% Showing shadows and differencing the before and after rasters
+%
+
+dz_x=diff(z);
+dz_y=diff(z,1,2);
+dz_2=-sqrt(dz_x(:,2:end).^2+dz_y(2:end,:).^2);
+
+dz_x1=diff(z1);
+dz_y1=diff(z1,1,2);
+dz_21=-sqrt(dz_x1(:,2:end).^2+dz_y1(2:end,:).^2);
+
+zdiff=(z1-z);
+
+%
+% Tons of figures for everything so I can get the differencing right
+%       at least in my head..
+%
+
+% figure(1),clf
+% imagesc(x/1e3,y/1e3,dz_x)
+% axis xy
+% axis equal
+% colorbar
+% caxis([-1,1])
+% colormap(gray)
+% 
+% figure(2),clf
+% imagesc(x1/1e3,y1/1e3,dz_x1)
+% axis xy
+% axis equal
+% colorbar
+% caxis([-1,1])
+% colormap(gray)
+
+% small but there are differences
+
+% figure(3),clf
+% imagesc(x/1e3,y/1e3,dz_y) % just plotting the different shading
+% axis xy
+% axis equal
+% colorbar
+% caxis([-1,1])
+% colormap(gray)
+% 
+% figure(4),clf
+% imagesc(x1/1e3,y1/1e3,dz_y1)
+% axis xy
+% axis equal
+% colorbar
+% caxis([-1,1])
+% colormap(gray)
+
+% figure(5),clf
+% imagesc(x/1e3,y/1e3,dz_2);
+% axis xy
+% axis equal
+% colorbar
+% caxis([-0.5,0.5])
+% colormap(cpolar)
+% 
+% figure(6),clf
+% imagesc(x/1e3,y/1e3,dz_2);
+% axis xy
+% axis equal
+% colorbar
+% caxis([-0.5,0.5])
+% colormap(cpolar)
+
+% 
+% plotting elevation difference (zafter-zbefore)
+%
+
+figure(7),clf
+imagesc(x/1e3,y/1e3,zdiff); % WORKS
+axis xy
+axis equal
+colorbar
+caxis([-0.5,0.5])
+colormap(cpolar)
+
+%
+% Read in data for Iterative closest point differencing
+%
+
+  filename='Kumamoto_example/comp_points_before.laz'; % This one is 6 M points
+  lasreader=lasFileReader(filename);
+  ptcloud=readPointCloud(lasreader);
+  pre_xyz=ptcloud.Location;
+
+  filename='Kumamoto_example/ref_points_after.laz'; % This one is 10 M points
+  lasreader=lasFileReader(filename);
+  ptcloud=readPointCloud(lasreader);
+  post_xyz=ptcloud.Location;
+
+  pre_x=pre_xyz(:,1);
+  pre_y=pre_xyz(:,2);
+  pre_z=pre_xyz(:,3);
+
+  post_x=post_xyz(:,1);
+  post_y=post_xyz(:,2);
+  post_z=post_xyz(:,3);
+
+%
+% visualize 
+%
+
+i=round(rand(1e3,1)*10e6); % decrease number to visualize and move 3D plots
+
+  % 2D plot
+  figure(8),clf
+  scatter(post_x(i)/1e3,post_y(i)/1e3,5,post_z(i),'filled'),
+  axis equal,colorbar
+
+  % 3D plot note: 'scatter3'
+  figure(9),clf
+  scatter3(post_x(i)/1e3,post_y(i)/1e3,post_z(i),5,post_z(i),'filled'),
+  colorbar
+
+%
+% set parameters spacing, windows, and margin (include aditional data) 
+%
+
+  grd=200; % Grid spacing in meters 
+  sz=50;   % Differencing window size in meters
+  margin=5; % Additional dimension of post-earthquake window. 
+
+%
+% Construct a core point grid for differencing 
+%
+
+  grid_x_points=[min(pre_x):grd:max(pre_x)];
+  grid_y_points=[min(pre_y):grd:max(pre_y)];
+
+  [core_x,core_y]=meshgrid(grid_x_points,grid_y_points);
+  core_x=core_x(:);
+  core_y=core_y(:);
+
+%
+% loop over grid sections to get data 
+%
+
+  for i=1:length(core_x)
+
+      x0=core_x(i); % this is the center of the grid for the x
+      y0=core_y(i); % this is the center of the grid for the y
+
+      ib=find(pre_x>x0-sz/2&pre_x<x0+sz/2&pre_y>y0-sz/2&pre_y<y0+sz/2);
+      
+      sz_a=sz+2*margin;
+      ia=find(post_x>x0-sz_a/2&post_x<x0+sz_a/2&post_y>y0-sz_a/2&post_y<y0+sz_a/2);
+
+      xmean=mean(pre_x(ib));
+      ymean=mean(pre_y(ib));
+      zmean=mean(pre_z(ib));
+
+      clear q_before p_after 
+      q_before(1,:)=pre_x(ib)-xmean;
+      q_before(2,:)=pre_y(ib)-ymean;
+      q_before(3,:)=pre_z(ib)-zmean;
+
+      p_after(1,:)=post_x(ia)-xmean;
+      p_after(2,:)=post_y(ia)-ymean;
+      p_after(3,:)=post_z(ia)-zmean;
+
+%
+% Iterative closest point differencing
+%
+
+% UNDERSTAND EACH VARIABLE 
+    % Usage: [TR, TT, ER, t] = icp(p_after,q_before,'Minimize','plane');
+    % Output:
+    %  - TR: Rotation
+    %  - TT: Displacement 
+    %  - ER: RMS error after each rotation
+    %  - t: Calculations time per interation 
+    % (we mostly just care about displacement)
+
+[~,translation] = icp(p_after,q_before,'Minimize','plane'); % note: point to plane
+
+ results(i,:) =[core_x(i) core_y(i) translation']; % to store results in array 
+  end
+
+%
+% plot results from differencing
+%
+
+  figure(10),clf
+  quiver(results(:,1)/1e3,results(:,2)/1e3,results(:,3),results(:,4),'k','LineWidth',1);hold on 
+  scatter(results(:,1)/1e3,results(:,2)/1e3,45,results(:,5),'filled');
+  axis equal,colorbar,caxis([-1,1]),colormap(cpolar)
+
+%
+% Demo for point clouds in one window with margins
+%
+  i=find(core_x==-14000 & core_y==-22100);
+  x0=core_x(i);
+  y0=core_y(i);
+     
+  ib=find(pre_x>x0-sz/2&pre_x<x0+sz/2&pre_y>y0-sz/2&pre_y<y0+sz/2);
+  sz_a=sz+2*margin;
+  ia=find(post_x>x0-sz_a/2&post_x<x0+sz_a/2&post_y>y0-sz_a/2&post_y<y0+sz_a/2);
+
+  xmean=mean(pre_x(ib));
+  ymean=mean(pre_y(ib));
+  zmean=mean(pre_z(ib));
+
+  clear q_before p_after % clear these out after each run, because each set of points is a different length
+  q_before(1,:)=pre_x(ib)-xmean;
+  q_before(2,:)=pre_y(ib)-ymean;
+  q_before(3,:)=pre_z(ib)-zmean;
+
+  p_after(1,:)=post_x(ia)-xmean;
+  p_after(2,:)=post_y(ia)-ymean;
+  p_after(3,:)=post_z(ia)-zmean;
+
+  figure(11),clf,
+    scatter3(q_before(1,:),q_before(2,:),q_before(3,:),5,'k','filled')          
+    hold on
+    scatter3(p_after(1,:),p_after(2,:),p_after(3,:),5,'r','filled')
+    legend('before','after')
+
+%
+% attempting to put everything together (differencing and vectors)
+%
+
+  figure(12),clf
+     axis xy, axis equal,colorbar,caxis([-1,1]),colormap(cpolar)
+     imagesc(x/1e3,y/1e3,zdiff); hold on
+     quiver(results(:,1)/1e3,results(:,2)/1e3,results(:,3),results(:,4),'k','LineWidth',1);hold on 
+     scatter(results(:,1)/1e3,results(:,2)/1e3,45,results(:,5),'filled');
+     colormap(cpolar) 
+    
+%
+% notes at the moment
+%   the two data sets seem to be at different positions?
+%   possibly make the vectors more distinct
+%
