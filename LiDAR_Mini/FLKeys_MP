@@ -1,0 +1,169 @@
+clear
+
+%
+% Presentation for Mini project on LiDAR
+% https://docs.google.com/presentation/d/1CHuVWOi76veu4w4lyVzkINIKO7zyFRBiOqFZRadtyho/edit?usp=sharing
+%
+
+
+%
+% Load in before (2016) and after (2018) data 
+%
+
+  filename='FLKeys/2016_HC.laz'; 
+  lasreader=lasFileReader(filename);
+  ptcloud=readPointCloud(lasreader);
+  HCpre_xyz=ptcloud.Location;
+
+%   filename='FLKeys/2018_HC.laz'; 
+%   lasreader=lasFileReader(filename);
+%   ptcloud=readPointCloud(lasreader);
+%   HCpost_xyz=ptcloud.Location;
+
+  filename='FLKeys/2016_HC.tif';
+  [array,metadata]=geotiffread(filename);
+  x=metadata.XWorldLimits;
+  y=metadata.YWorldLimits;
+  z=flipud(array);
+  z(find(z==-9999))=NaN;
+
+  filename='FLKeys/2018_HC.tif';
+  [array,metadata]=geotiffread(filename);
+  x1=metadata.XWorldLimits;
+  y1=metadata.YWorldLimits;
+  z1=flipud(array);
+  z1(find(z1==-9999))=NaN;
+
+%
+% Read in data for Iterative closest point differencing
+%
+
+  dz_x=diff(z);
+  dz_y=diff(z,1,2);
+  dz_2=-sqrt(dz_x(:,2:end).^2+dz_y(2:end,:).^2);
+
+  HCpre_x=HCpre_xyz(:,1);
+  HCpre_y=HCpre_xyz(:,2);
+  HCpre_z=HCpre_xyz(:,3);
+
+  zdiff=(z1-z);
+
+%   HCpost_x=HCpost_xyz(:,1);
+%   HCpost_y=HCpost_xyz(:,2);
+%   HCpost_z=HCpost_xyz(:,3);
+
+%
+% try to visualize what there is
+%
+
+  figure(1),clf
+  imagesc(x/1e3,y/1e3,dz_x)
+  axis xy
+  axis equal
+  colorbar
+  caxis([-1,1])
+  colormap(cpolar)  
+
+  figure(2),clf
+  imagesc(x/1e3,y/1e3,dz_y) % just plotting the different shading
+  axis xy
+  axis equal
+  colorbar
+  caxis([-1,1])
+  colormap(cpolar)
+
+  figure(3),clf
+  imagesc(x/1e3,y/1e3,dz_y) % just plotting the different shading
+  axis xy
+  axis equal
+  colorbar
+  caxis([-1,1])
+  colormap(cpolar)
+
+  figure(4),clf
+  imagesc(x/1e3,y/1e3,dz_2);
+  axis xy
+  axis equal
+  colorbar
+  caxis([-0.5,0.5])
+  colormap(cpolar)
+
+%   % 2D plot for Hens and Chickens Reef
+%   figure(3),clf
+%   scatter(HCpost_x/1e3,HCpost_y/1e3,5,HCpost_z,'filled'),
+%   axis equal,colorbar
+
+  % 2D plot for Hens and Chickens Reef
+  figure(5),clf
+  scatter(HCpre_x/1e3,HCpre_y/1e3,5,HCpre_z,'filled'),
+  axis equal,colorbar
+
+ 
+%
+% Attempt LiDAR raster differencing
+%
+
+filename='FLKeys/2016_HC.tif';
+[array,metadata]=geotiffread(filename);
+x=metadata.XWorldLimits;
+y=metadata.YWorldLimits;
+z=flipud(array);
+z(find(z==-9999))=NaN;
+
+filename='FLKeys/2016_HC.tif';
+[array,metadata]=geotiffread(filename);
+x1=metadata.XWorldLimits;
+y1=metadata.YWorldLimits;
+z1=flipud(array);
+z1(find(z1==-9999))=NaN;
+
+%
+% Showing shadows and differencing the before and after rasters
+%
+
+dz_x=diff(z);
+dz_y=diff(z,1,2);
+dz_2=-sqrt(dz_x(:,2:end).^2+dz_y(2:end,:).^2);
+
+dz_x1=diff(z1);
+dz_y1=diff(z1,1,2);
+dz_21=-sqrt(dz_x1(:,2:end).^2+dz_y1(2:end,:).^2);
+
+zdiff=(z1-z);
+
+%
+% Tons of figures for everything so I can get the differencing right
+%       at least in my head..
+%
+
+figure(5),clf
+imagesc(x/1e3,y/1e3,dz_x)
+axis xy
+axis equal
+colorbar
+caxis([-1,1])
+colormap(gray)
+
+figure(6),clf
+imagesc(x/1e3,y/1e3,dz_y) % just plotting the different shading
+axis xy
+axis equal
+colorbar
+caxis([-1,1])
+colormap(gray)
+
+figure(7),clf
+imagesc(x/1e3,y/1e3,dz_2);
+axis xy
+axis equal
+colorbar
+caxis([-0.5,0.5])
+colormap(cpolar)
+
+%
+% visualize the region in 3D - does not work Array indices must be positive integers or logical values.
+%
+
+  figure(8),clf
+  scatter3(HCpre_x(i)/1e3,HCpre_y(i)/1e3,HCpre_z(i),5,HCpre_z(i),'filled'),
+  colorbar
